@@ -1,3 +1,5 @@
-﻿__pycache__/
+__pycache__/
 *.pyc
-model/tinygpt_hindi.pt
+model/tinygpt_multilingual.pt
+compression/tinygpt_multilingual_int8.pt
+classifier/sentiment_classifier.pt

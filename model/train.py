@@ -8,12 +8,12 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from model.lm import TinyGPT
 
-CORPUS_PATH = "data/corpus_hi.txt"
-SP_MODEL = "tokenizer/hindi_bpe.model"
-CKPT_PATH = "model/tinygpt_hindi.pt"
+CORPUS_PATH = "data/corpus_multilingual.txt"   # tagged: "<hi> ...", "<te> ...", "<ml> ..."
+SP_MODEL = "tokenizer/multilingual_bpe.model"
+CKPT_PATH = "model/tinygpt_multilingual.pt"
 SEQ_LEN = 32
 BATCH_SIZE = 64
-EPOCHS = 15
+EPOCHS = 20          # a bit more than the single-language run: 3x the data, harder task
 LR = 3e-4
 
 def load_data(sp):
@@ -58,7 +58,7 @@ def main():
     train_data, val_data, _ = load_data(sp)
     print(f"Train tokens: {len(train_data)}, Val tokens: {len(val_data)}")
 
-    model = TinyGPT(vocab_size=vocab_size, d_model=128, n_heads=4, n_layers=2, max_seq_len=SEQ_LEN)
+    model = TinyGPT(vocab_size=vocab_size, d_model=160, n_heads=4, n_layers=3, max_seq_len=SEQ_LEN)
     n_params = sum(p.numel() for p in model.parameters())
     print(f"Model params: {n_params:,}")
 
@@ -81,7 +81,7 @@ def main():
               f"val_loss {val_loss:.3f} | val_perplexity {val_ppl:.2f}")
 
     torch.save({"model_state": model.state_dict(), "vocab_size": vocab_size,
-                "d_model": 128, "n_heads": 4, "n_layers": 2, "max_seq_len": SEQ_LEN},
+                "d_model": 160, "n_heads": 4, "n_layers": 3, "max_seq_len": SEQ_LEN},
                CKPT_PATH)
     print(f"\nSaved checkpoint -> {CKPT_PATH}")
 

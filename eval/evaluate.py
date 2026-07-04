@@ -20,8 +20,8 @@ from model.lm import TinyGPT
 from model.train import load_data
 from decoding.strategies import greedy_decode, beam_search_decode, top_k_sampling_decode, top_p_sampling_decode
 
-SP_MODEL = "tokenizer/hindi_bpe.model"
-CKPT_PATH = "model/tinygpt_hindi.pt"
+SP_MODEL = "tokenizer/multilingual_bpe.model"
+CKPT_PATH = "model/tinygpt_multilingual.pt"
 
 
 def load_model():
@@ -95,7 +95,7 @@ def self_bleu_pairwise(sentences_tokens, max_n=2):
 
 
 def eval_decoding_diversity(model, sp):
-    prompts = ["राम", "बच्चे पार्क में", "किसान", "गीता", "दोस्त"]
+    prompts = ["<hi> राम", "<hi> बच्चे पार्क में", "<te> విద్యార్థి", "<ml> കുട്ടികൾ", "<hi> दोस्त"]
     eos_id = sp.eos_id()
     strategies = {
         "greedy": lambda ids: greedy_decode(model, ids, 15, eos_id=eos_id),

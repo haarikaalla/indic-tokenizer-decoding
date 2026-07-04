@@ -5,8 +5,8 @@ from decoding.strategies import (
     greedy_decode, beam_search_decode, top_k_sampling_decode, top_p_sampling_decode
 )
 
-SP_MODEL = "tokenizer/hindi_bpe.model"
-CKPT_PATH = "model/tinygpt_hindi.pt"
+SP_MODEL = "tokenizer/multilingual_bpe.model"
+CKPT_PATH = "model/tinygpt_multilingual.pt"
 
 def load_model():
     ckpt = torch.load(CKPT_PATH, map_location="cpu")
@@ -18,6 +18,7 @@ def load_model():
     return model
 
 def run(prompt, max_new_tokens=20):
+    """prompt should include a language tag prefix, e.g. '<hi> राम'"""
     sp = spm.SentencePieceProcessor(model_file=SP_MODEL)
     model = load_model()
 
@@ -43,6 +44,10 @@ def run(prompt, max_new_tokens=20):
     print()
 
 if __name__ == "__main__":
-    prompts = ["राम", "बच्चे पार्क में", "किसान"]
+    prompts = [
+        "<hi> राम",
+        "<te> విద్యార్థి",
+        "<ml> കുട്ടികൾ",
+    ]
     for p in prompts:
         run(p)
