@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🪔 Multilingual Indic Generation Service
+#  Multilingual Indic Generation Service
 
 ### Tokenization → Generation → Decoding → Safety → Compression → Serving
 
