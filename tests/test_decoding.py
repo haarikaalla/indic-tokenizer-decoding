@@ -90,3 +90,73 @@ def test_all_strategies_never_exceed_model_context_window(tiny_model, prompt_ids
     ]:
         out = decode_fn(tiny_model, prompt_ids, max_new_tokens=30, **kwargs)
         assert out.shape[1] <= prompt_ids.shape[1] + 30
+
+
+# --- Input validation: bad arguments must fail loudly, not silently misbehave ---
+
+@pytest.mark.parametrize("decode_fn,kwargs", [
+    (greedy_decode, {}),
+    (beam_search_decode, {"beam_width": 2}),
+    (top_k_sampling_decode, {"k": 5}),
+    (top_p_sampling_decode, {"p": 0.9}),
+])
+def test_batched_input_is_rejected(tiny_model, decode_fn, kwargs):
+    """These implementations assume batch size 1; a silent wrong answer would be worse."""
+    batched = torch.randint(0, VOCAB_SIZE, (2, 4))
+    with pytest.raises(ValueError):
+        decode_fn(tiny_model, batched, max_new_tokens=3, **kwargs)
+
+
+@pytest.mark.parametrize("decode_fn,kwargs", [
+    (greedy_decode, {}),
+    (beam_search_decode, {"beam_width": 2}),
+    (top_k_sampling_decode, {"k": 5}),
+    (top_p_sampling_decode, {"p": 0.9}),
+])
+def test_one_dimensional_input_is_rejected(tiny_model, decode_fn, kwargs):
+    with pytest.raises(ValueError):
+        decode_fn(tiny_model, torch.tensor([1, 2, 3]), max_new_tokens=3, **kwargs)
+
+
+@pytest.mark.parametrize("decode_fn,kwargs", [
+    (top_k_sampling_decode, {"k": 5}),
+    (top_p_sampling_decode, {"p": 0.9}),
+])
+def test_nonpositive_temperature_is_rejected(tiny_model, prompt_ids, decode_fn, kwargs):
+    with pytest.raises(ValueError):
+        decode_fn(tiny_model, prompt_ids, max_new_tokens=3, temperature=0.0, **kwargs)
+
+
+def test_k_larger_than_vocab_is_clamped_not_crashed(tiny_model, prompt_ids):
+    """torch.topk would raise if k exceeded the vocabulary; we clamp instead."""
+    out = top_k_sampling_decode(tiny_model, prompt_ids, max_new_tokens=3, k=VOCAB_SIZE * 10)
+    assert out.shape[1] == prompt_ids.shape[1] + 3
+
+
+def test_beam_width_larger_than_vocab_is_clamped(tiny_model, prompt_ids):
+    out = beam_search_decode(tiny_model, prompt_ids, max_new_tokens=3, beam_width=VOCAB_SIZE * 10)
+    assert out.shape[1] <= prompt_ids.shape[1] + 3
+
+
+def test_top_p_of_one_keeps_the_full_distribution(tiny_model, prompt_ids):
+    """p=1.0 must not collapse the nucleus to a single token (a real bug we fixed)."""
+    out = top_p_sampling_decode(tiny_model, prompt_ids, max_new_tokens=5, p=1.0)
+    assert out.shape[1] == prompt_ids.shape[1] + 5
+
+
+@pytest.mark.parametrize("bad_p", [0.0, -0.5, 1.5])
+def test_out_of_range_p_is_rejected(tiny_model, prompt_ids, bad_p):
+    with pytest.raises(ValueError):
+        top_p_sampling_decode(tiny_model, prompt_ids, max_new_tokens=3, p=bad_p)
+
+
+@pytest.mark.parametrize("bad_k", [0, -3])
+def test_nonpositive_k_is_rejected(tiny_model, prompt_ids, bad_k):
+    with pytest.raises(ValueError):
+        top_k_sampling_decode(tiny_model, prompt_ids, max_new_tokens=3, k=bad_k)
+
+
+def test_model_raises_a_clear_error_beyond_its_context_window(tiny_model):
+    too_long = torch.randint(0, VOCAB_SIZE, (1, MAX_SEQ_LEN + 1))
+    with pytest.raises(ValueError, match="context window"):
+        tiny_model(too_long)

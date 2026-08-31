@@ -85,23 +85,46 @@ _state: dict = {}
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    ckpt = torch.load(MODEL_CKPT, map_location="cpu")
-    model = TinyGPT(vocab_size=ckpt["vocab_size"], d_model=ckpt["d_model"],
-                     n_heads=ckpt["n_heads"], n_layers=ckpt["n_layers"],
-                     max_seq_len=ckpt["max_seq_len"])
-    model.load_state_dict(ckpt["model_state"])
-    model.eval()
+    """
+    Load every artifact exactly once, and degrade gracefully instead of crash-looping.
 
-    tokenizer = IndicTokenizer(TOKENIZER_PATH)
+    * language model missing  -> the service starts but reports `unavailable`, so an
+      orchestrator sees an unhealthy container instead of an endless restart loop
+      with the real error scrolled off the top of the logs;
+    * classifier missing      -> the service still serves unfiltered generation and
+      reports `degraded`, and safety-filtered requests are refused explicitly.
+    """
+    device = config.resolve_device()
+    _state["device"] = str(device)
 
-    classifier = TextClassifier(vocab_size=tokenizer.vocab_size)
-    classifier.load_state_dict(torch.load(CLASSIFIER_CKPT, map_location="cpu"))
-    classifier.eval()
-    safety_filter = SafetyFilter(classifier, tokenizer)
+    try:
+        _state["pipeline"] = build_pipeline(with_safety_filter=True, device=device)
+        _state["pipeline_no_filter"] = MultilingualGenerationPipeline(
+            _state["pipeline"].model, _state["pipeline"].tokenizer, safety_filter=None
+        )
+        _state["status"] = "ok"
+    except FileNotFoundError as exc:
+        logger.error("Startup artifact missing: %s", exc)
+        _state["status"] = "unavailable"
+    except Exception:
+        logger.exception("Failed to load the generation pipeline.")
+        _state["status"] = "unavailable"
 
-    _state["pipeline"] = MultilingualGenerationPipeline(model, tokenizer, safety_filter)
-    _state["pipeline_no_filter"] = MultilingualGenerationPipeline(model, tokenizer, safety_filter=None)
-    _state["model_params"] = sum(p.numel() for p in model.parameters())
+    if _state["status"] == "unavailable":
+        # The safety classifier may be the only thing missing -- try serving without it.
+        try:
+            _state["pipeline_no_filter"] = build_pipeline(with_safety_filter=False, device=device)
+            _state["status"] = "degraded"
+            logger.warning("Serving in DEGRADED mode: safety filter unavailable.")
+        except Exception:
+            logger.exception("Language model unavailable; /generate will return 503.")
+
+    model = getattr(_state.get("pipeline_no_filter"), "model", None)
+    _state["model_params"] = sum(p.numel() for p in model.parameters()) if model is not None else 0
+    logger.info(
+        "Startup complete: status=%s device=%s params=%s",
+        _state["status"], _state["device"], f"{_state['model_params']:,}",
+    )
 
     yield  # app runs here
 
@@ -116,35 +139,85 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+# CORS is opt-in via ITD_CORS_ORIGINS. There is deliberately no "*" default: a
+# wildcard origin on a service that anyone can POST free text to is an easy way to
+# let arbitrary pages drive your model on a user's behalf.
+_ALLOWED_ORIGINS = config.cors_origins()
+if _ALLOWED_ORIGINS:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=_ALLOWED_ORIGINS,
+        allow_credentials=False,
+        allow_methods=["GET", "POST"],
+        allow_headers=["Content-Type"],
+    )
+
+
+@app.exception_handler(ValueError)
+async def value_error_handler(request: Request, exc: ValueError) -> JSONResponse:
+    """Turn argument-validation failures into 400s instead of opaque 500s."""
+    logger.warning("Bad request to %s: %s", request.url.path, exc)
+    return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={"detail": str(exc)})
+
 
 @app.get("/health", response_model=HealthResponse)
 def health() -> HealthResponse:
+    """Liveness/readiness probe: reports whether the model and safety filter loaded."""
     return HealthResponse(
-        status="ok",
+        status=_state.get("status", "unavailable"),
         supported_languages=sorted(SUPPORTED_LANG_TAGS),
         model_params=_state.get("model_params", 0),
+        safety_filter_available="pipeline" in _state,
+        device=_state.get("device", "unknown"),
     )
 
 
 @app.post("/generate", response_model=GenerateResponse)
 def generate(req: GenerateRequest) -> GenerateResponse:
+    """Generate a continuation of a language-tagged prompt with the chosen decoding strategy."""
     tag = req.prompt.strip().split(" ", 1)[0]
     if tag not in SUPPORTED_LANG_TAGS:
         raise HTTPException(
-            status_code=400,
+            status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Prompt must start with one of {sorted(SUPPORTED_LANG_TAGS)}, got {tag!r}.",
         )
 
-    strategy = STRATEGY_MAP[req.strategy]()
+    if req.safety_filter and "pipeline" not in _state:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Safety filter is unavailable on this instance. Retry with safety_filter=false "
+                   "only if unfiltered output is acceptable for your use case.",
+        )
+    if "pipeline_no_filter" not in _state:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Model is not loaded. See /health and the service logs.",
+        )
+
     pipeline = _state["pipeline"] if req.safety_filter else _state["pipeline_no_filter"]
+    strategy = build_strategy(req.strategy)
 
     start = time.perf_counter()
-    text = pipeline.generate(
-        req.prompt, strategy,
-        max_new_tokens=req.max_new_tokens,
-        seed=req.seed,
-    )
+    try:
+        text = pipeline.generate(
+            req.prompt, strategy,
+            max_new_tokens=req.max_new_tokens,
+            seed=req.seed,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
+    except Exception as exc:  # never leak stack traces / paths to the caller
+        logger.exception("Generation failed for strategy=%s", req.strategy)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Generation failed. See service logs for details.",
+        ) from exc
     latency_ms = (time.perf_counter() - start) * 1000
+
+    logger.info(
+        "generate strategy=%s tokens=%d filter=%s latency_ms=%.1f",
+        req.strategy, req.max_new_tokens, req.safety_filter, latency_ms,
+    )
 
     return GenerateResponse(
         text=text,

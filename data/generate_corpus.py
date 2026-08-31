@@ -10,9 +10,19 @@ languages and produces:
 Language tags (<hi>, <te>, <ml>) prepended to each line follow the same pattern
 used in real multilingual models like mBART/mT5 to condition generation on language.
 """
-import random
+from __future__ import annotations
 
-random.seed(42)
+import logging
+import random
+import sys
+from pathlib import Path
+
+if __package__ in (None, ""):  # `python data/generate_corpus.py`
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+import config
+
+logger = logging.getLogger("corpus")
 
 LANGUAGES = {
     "hi": {
@@ -90,7 +100,8 @@ LANGUAGES = {
 }
 
 
-def make_sentence(lang_cfg):
+def make_sentence(lang_cfg: dict) -> str:
+    """Compose one sentence by filling a random template with random vocabulary."""
     subj = random.choice(lang_cfg["subjects"])
     verb = random.choice(lang_cfg["verbs"])
     place = random.choice(lang_cfg["places"])
@@ -101,7 +112,13 @@ def make_sentence(lang_cfg):
     return template.format(subj=subj, verb=verb, place=place, time=time, adj=adj, topic=topic)
 
 
-def generate_language(lang_code, n_sentences=1200):
+def generate_language(lang_code: str, n_sentences: int = 1200) -> list[str]:
+    """Generate up to `n_sentences` unique sentences for one language."""
+    if lang_code not in LANGUAGES:
+        raise ValueError(f"Unknown language {lang_code!r}. Known: {sorted(LANGUAGES)}.")
+    if n_sentences < 1:
+        raise ValueError(f"n_sentences must be >= 1, got {n_sentences}.")
+
     cfg = LANGUAGES[lang_code]
     seen, sentences, attempts = set(), [], 0
     while len(sentences) < n_sentences and attempts < n_sentences * 20:
@@ -110,25 +127,33 @@ def generate_language(lang_code, n_sentences=1200):
         if s not in seen:
             seen.add(s)
             sentences.append(s)
+
+    if len(sentences) < n_sentences:
+        logger.warning(
+            "[%s] templates exhausted: produced %d/%d unique sentences.",
+            lang_code, len(sentences), n_sentences,
+        )
     return sentences
 
 
-def main(n_per_lang=1200):
-    all_tagged_lines = []
+def main(n_per_lang: int = 1200) -> None:
+    config.setup_logging()
+    random.seed(config.SEED if config.SEED else 42)
+    config.DATA_DIR.mkdir(parents=True, exist_ok=True)
+
+    all_tagged_lines: list[str] = []
     for lang_code in LANGUAGES:
         sentences = generate_language(lang_code, n_per_lang)
-        out_path = f"data/corpus_{lang_code}.txt"
-        with open(out_path, "w", encoding="utf-8") as f:
-            f.write("\n".join(sentences) + "\n")
-        print(f"[{lang_code}] wrote {len(sentences)} unique sentences -> {out_path}")
+        out_path = config.DATA_DIR / f"corpus_{lang_code}.txt"
+        out_path.write_text("\n".join(sentences) + "\n", encoding="utf-8")
+        logger.info("[%s] wrote %d unique sentences -> %s", lang_code, len(sentences), out_path)
 
-        tagged = [f"<{lang_code}> {s}" for s in sentences]
-        all_tagged_lines.extend(tagged)
+        all_tagged_lines.extend(f"<{lang_code}> {s}" for s in sentences)
 
     random.shuffle(all_tagged_lines)
-    with open("data/corpus_multilingual.txt", "w", encoding="utf-8") as f:
-        f.write("\n".join(all_tagged_lines) + "\n")
-    print(f"\n[combined] wrote {len(all_tagged_lines)} tagged sentences -> data/corpus_multilingual.txt")
+    config.MULTILINGUAL_CORPUS.write_text("\n".join(all_tagged_lines) + "\n", encoding="utf-8")
+    logger.info("[combined] wrote %d tagged sentences -> %s",
+                len(all_tagged_lines), config.MULTILINGUAL_CORPUS)
 
 
 if __name__ == "__main__":
