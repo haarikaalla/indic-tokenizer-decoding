@@ -57,7 +57,7 @@ reduction from int8 quantization.
 </td>
 <td width="33%" valign="top">
 
-### 🚢 Shipped, not notebooked
+###  Shipped, not notebooked
 FastAPI service, one-time model load,
 degraded-mode health checks, non-root
 Docker image, centralized config,
@@ -127,7 +127,7 @@ flowchart LR
 | **Text classifier** | ✅ | `classifier/classifier_model.py` — BiLSTM with packed sequences |
 | **Quantization** | ➖ | Uses `torch.quantization.quantize_dynamic` — the *benchmarking methodology* (size/latency/quality before-after) is the contribution |
 
-## 📈 Results dashboard
+##  Results dashboard
 
 <div align="center">
 
