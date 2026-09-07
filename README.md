@@ -603,8 +603,8 @@ docker run -p 8000:8000 indic-generation-service
 <sub>Hindi · Telugu · Malayalam · Kannada</sub>
 
 </div>
-- Add request-level rate limiting and batching to the API for realistic
+Add request-level rate limiting and batching to the API for realistic
   concurrent-traffic behavior.
-- Add a 5th language (e.g. Tamil or Marathi) as a regression check on whether
+Add a 5th language (e.g. Tamil or Marathi) as a regression check on whether
   the architecture and API layer generalize without code changes — only the
   `LANGUAGES` dict in `data/generate_corpus.py` should need to change.
