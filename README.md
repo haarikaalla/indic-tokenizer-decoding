@@ -117,25 +117,25 @@ flowchart LR
 
 ##  Interactive architecture
 
-These diagrams are generated from the checked-in JSON specifications by the official **[Archify](https://github.com/tt-a1i/archify) v3.0.1** renderer. The PNG previews render directly on GitHub; download the matching HTML file for the full interactive viewer.
+These diagrams are generated from the checked-in JSON specifications by the official **[Archify](https://github.com/tt-a1i/archify) v3.0.1** renderer. The PNG previews render directly on GitHub. The workflow also packages the official interactive HTML files as a downloadable GitHub Actions artifact.
 
 ### Overall project architecture
 
 ![Archify-generated overall project architecture](docs/architecture/tokenizer-architecture.png)
 
-[Interactive HTML](docs/architecture/tokenizer-architecture.html) · [Archify JSON](docs/architecture/tokenizer-architecture.json)
+[Archify JSON source](docs/architecture/tokenizer-architecture.json)
 
 ### Encoding pipeline
 
 ![Archify-generated encoding pipeline](docs/architecture/encoding-flow.png)
 
-[Interactive HTML](docs/architecture/encoding-flow.html) · [Archify JSON](docs/architecture/encoding-flow.json)
+[Archify JSON source](docs/architecture/encoding-flow.json)
 
 ### Decoding pipeline
 
 ![Archify-generated decoding pipeline](docs/architecture/decoding-flow.png)
 
-[Interactive HTML](docs/architecture/decoding-flow.html) · [Archify JSON](docs/architecture/decoding-flow.json) · [Documentation guide](docs/architecture/README.md)
+[Archify JSON source](docs/architecture/decoding-flow.json) · [Documentation guide](docs/architecture/README.md)
 
 > Archify is documentation-only. It is not a Python dependency and does not alter tokenizer, decoder, model, API, tests, benchmarks, or runtime behavior.
 
