@@ -1,0 +1,85 @@
+name: Build and publish Archify documentation
+
+on:
+  push:
+    branches: [main, docs/render-architecture-previews]
+    paths:
+      - "docs/architecture/**"
+      - ".github/workflows/archify-docs.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "docs/architecture/**"
+      - ".github/workflows/archify-docs.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: archify-pages-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check out official Archify
+        uses: actions/checkout@v4
+        with:
+          repository: tt-a1i/archify
+          path: .archify-tool
+          ref: v3.0.1
+
+      - name: Install Archify renderer dependencies
+        working-directory: .archify-tool/archify
+        run: npm ci
+
+      - name: Render with official Archify CLI
+        run: |
+          node .archify-tool/archify/bin/archify.mjs render architecture docs/architecture/tokenizer-architecture.json docs/architecture/tokenizer-architecture.html --repo-root .
+          node .archify-tool/archify/bin/archify.mjs render sequence docs/architecture/encoding-flow.json docs/architecture/encoding-flow.html --repo-root .
+          node .archify-tool/archify/bin/archify.mjs render sequence docs/architecture/decoding-flow.json docs/architecture/decoding-flow.html --repo-root .
+
+      - name: Verify rendered Archify documents
+        run: |
+          node .archify-tool/archify/bin/archify.mjs check docs/architecture/tokenizer-architecture.html
+          node .archify-tool/archify/bin/archify.mjs check docs/architecture/encoding-flow.html
+          node .archify-tool/archify/bin/archify.mjs check docs/architecture/decoding-flow.html
+
+      - name: Build Pages directory
+        run: |
+          mkdir -p _site
+          cp -R docs/architecture/. _site/
+          cp docs/architecture/pages-index.html _site/index.html
+
+      - name: Configure GitHub Pages
+        if: github.ref == 'refs/heads/main'
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      - name: Upload Pages artifact
+        if: github.ref == 'refs/heads/main'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    if: github.ref == 'refs/heads/main'
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: render
+    steps:
+      - name: Deploy Archify documentation
+        id: deployment
+        uses: actions/deploy-pages@v4

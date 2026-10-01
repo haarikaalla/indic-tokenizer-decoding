@@ -1,0 +1,128 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "Encoding Pipeline",
+    "output": "docs/architecture/encoding-flow.html",
+    "quality_profile": "showcase",
+    "column_fit": "spread",
+    "repository": {
+      "url": "https://github.com/haarikaalla/indic-tokenizer-decoding",
+      "provider": "github",
+      "link_mode": "web",
+      "revision": "48465792f7a0160835154e0dee857eb2fa8629c3"
+    }
+  },
+  "participants": [
+    {
+      "id": "caller",
+      "type": "frontend",
+      "label": "Caller",
+      "sublabel": "CLI or API",
+      "sources": [
+        {
+          "path": "generate.py"
+        },
+        {
+          "path": "api.py"
+        }
+      ]
+    },
+    {
+      "id": "pipeline",
+      "type": "backend",
+      "label": "Generation Pipeline",
+      "sources": [
+        {
+          "path": "pipeline.py"
+        }
+      ]
+    },
+    {
+      "id": "tokenizer",
+      "type": "backend",
+      "label": "SentencePiece",
+      "sublabel": "IndicTokenizer",
+      "sources": [
+        {
+          "path": "pipeline.py"
+        },
+        {
+          "path": "loaders.py"
+        }
+      ]
+    },
+    {
+      "id": "tensor",
+      "type": "backend",
+      "label": "PyTorch Tensor",
+      "sublabel": "model-device input",
+      "sources": [
+        {
+          "path": "pipeline.py"
+        }
+      ]
+    },
+    {
+      "id": "model",
+      "type": "backend",
+      "label": "TinyGPT",
+      "sources": [
+        {
+          "path": "model/lm.py"
+        }
+      ]
+    }
+  ],
+  "messages": [
+    {
+      "id": "prompt",
+      "from": "caller",
+      "to": "pipeline",
+      "y": 190,
+      "label": "validated language-tagged Unicode prompt",
+      "variant": "emphasis"
+    },
+    {
+      "id": "encode",
+      "from": "pipeline",
+      "to": "tokenizer",
+      "y": 310,
+      "label": "encode(text) → integer token IDs"
+    },
+    {
+      "id": "bos",
+      "from": "tokenizer",
+      "to": "pipeline",
+      "y": 370,
+      "label": "prompt IDs; prepend BOS",
+      "variant": "return"
+    },
+    {
+      "id": "build",
+      "from": "pipeline",
+      "to": "tensor",
+      "y": 430,
+      "label": "torch.long [[BOS, ...prompt_ids]]"
+    },
+    {
+      "id": "forward",
+      "from": "tensor",
+      "to": "model",
+      "y": 490,
+      "label": "input sequence on model device",
+      "variant": "emphasis"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Vocabulary handling",
+      "items": [
+        "SentencePiece loads tokenizer/multilingual_bpe.model",
+        "Language tags are configured user-defined symbols",
+        "BOS/EOS/UNK IDs come from the trained model"
+      ]
+    }
+  ]
+}
