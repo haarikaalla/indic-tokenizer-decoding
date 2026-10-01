@@ -28,6 +28,8 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Check out official Archify
         uses: actions/checkout@v4
@@ -42,9 +44,9 @@ jobs:
 
       - name: Render with official Archify CLI
         run: |
-          node .archify-tool/archify/bin/archify.mjs render architecture docs/architecture/tokenizer-architecture.json docs/architecture/tokenizer-architecture.html
-          node .archify-tool/archify/bin/archify.mjs render sequence docs/architecture/encoding-flow.json docs/architecture/encoding-flow.html
-          node .archify-tool/archify/bin/archify.mjs render sequence docs/architecture/decoding-flow.json docs/architecture/decoding-flow.html
+          node .archify-tool/archify/bin/archify.mjs render architecture docs/architecture/tokenizer-architecture.json docs/architecture/tokenizer-architecture.html --repo-root .
+          node .archify-tool/archify/bin/archify.mjs render sequence docs/architecture/encoding-flow.json docs/architecture/encoding-flow.html --repo-root .
+          node .archify-tool/archify/bin/archify.mjs render sequence docs/architecture/decoding-flow.json docs/architecture/decoding-flow.html --repo-root .
 
       - name: Verify rendered Archify documents
         run: |
