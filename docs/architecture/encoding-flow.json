@@ -80,15 +80,8 @@
       "from": "caller",
       "to": "pipeline",
       "y": 190,
-      "label": "language-tagged Unicode prompt",
+      "label": "validated language-tagged Unicode prompt",
       "variant": "emphasis"
-    },
-    {
-      "id": "validate",
-      "from": "pipeline",
-      "to": "pipeline",
-      "y": 250,
-      "label": "validate prompt and limits"
     },
     {
       "id": "encode",
