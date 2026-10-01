@@ -1,46 +1,56 @@
-# Interactive architecture documentation
+# Explore the architecture
 
-This directory contains source-backed Archify architecture views for the repository at commit `5bb428e9b1c8e031e6d78ef8caa8a9ad26614fc8`.
+**[Download the interactive HTML](https://github.com/haarikaalla/indic-tokenizer-decoding/raw/refs/heads/main/docs/architecture/tokenizer-architecture.html)**, save it, then open it in a browser. It is self-contained; Archify is not needed to view it. Source-code links require an internet connection.
 
-| Artifact | Purpose |
+The repository keeps one overall architecture map, with three representations:
+
+| File | Purpose |
 |---|---|
-| ![Overall architecture preview](tokenizer-architecture.png)<br>[JSON source](tokenizer-architecture.json) | Runtime modules, training paths, artifacts, evaluation, benchmarks, quantization, and actual external libraries |
-| ![Encoding flow preview](encoding-flow.png)<br>[JSON source](encoding-flow.json) | Prompt validation, SentencePiece encoding, BOS insertion, tensor creation, and model input |
-| ![Decoding flow preview](decoding-flow.png)<br>[JSON source](decoding-flow.json) | Strategy selection, autoregressive logits loop, EOS handling, text decoding, and optional safety retries |
+| [tokenizer-architecture.html](tokenizer-architecture.html) | Official Archify viewer with interactive controls |
+| [tokenizer-architecture.png](tokenizer-architecture.png) | Static preview for the GitHub README |
+| [tokenizer-architecture.json](tokenizer-architecture.json) | Editable typed source used by Archify |
 
-## Evidence and scope
+GitHub's file viewer shows HTML source and cannot execute the viewer. Use **Download raw file**, then open the saved file. A PNG cannot provide interactive controls.
 
-The diagrams were authored from the repository's Python source, configuration, tests, and dependency manifest. Source links in each view point to the file supporting the component or relationship. The views do not assert infrastructure, databases, queues, cloud services, or external APIs that are absent from the code.
+## Explore it
 
-The term **decoding** has two distinct meanings in this project:
+| Action | Control |
+|---|---|
+| Inspect a component and its source references | Click a node |
+| Find a component | Search or `/` |
+| Explore a directed route | **PATH** or `R` |
+| Compare component types | **LENS** or `L` |
+| Change theme | Theme switch or `T` |
+| Enter presentation mode | Fullscreen button or `F` |
+| Save an image | **Export** |
+| See available controls | `?` |
 
-1. `decoding/strategies.py` selects new token IDs from TinyGPT logits.
-2. SentencePiece converts the final token-ID sequence back to Unicode text.
+## Provenance
 
-Both stages are shown separately to avoid conflating generation strategy with tokenizer detokenization.
+The checked-in HTML is preserved byte-for-byte from the successful [official Archify build](https://github.com/haarikaalla/indic-tokenizer-decoding/actions/runs/36851307779), artifact `archify-generated-diagrams` (ID `11155152853`). That workflow checked out `tt-a1i/archify` at `v3.0.1`, rendered the typed JSON with its CLI, and passed the HTML checks before capturing the preview.
 
-## Regenerating with Archify
+The source links are pinned to repository commit `5bb428e9b1c8e031e6d78ef8caa8a9ad26614fc8`. Archify renders an agent-authored specification; it does not independently discover or verify every architectural claim. Source references let readers inspect those claims.
 
-Archify is documentation tooling only and is intentionally absent from `requirements.txt`. Install/use it in a documentation workspace, then validate and render the checked-in JSON:
+The map covers runtime generation, offline training, file-based model artifacts, and evaluation tooling. Its generic storage symbols refer to files, not a deployed database. Token generation strategies and SentencePiece conversion back to text are separate operations.
+
+## Regenerate
+
+Use an isolated checkout of the official renderer; it remains documentation tooling only:
 
 ```bash
-npx skills use tt-a1i/archify@archify --agent codex
+git clone --branch v3.0.1 --depth 1 https://github.com/tt-a1i/archify.git /tmp/archify
+npm ci --prefix /tmp/archify/archify
 
-# With an Archify checkout or installed skill path:
-node /path/to/archify/bin/archify.mjs finalize architecture \
+# Run from this repository root.
+node /tmp/archify/archify/bin/archify.mjs render architecture \
   docs/architecture/tokenizer-architecture.json \
-  docs/architecture/tokenizer-architecture.html \
-  --repo-root . --quality showcase --json
+  docs/architecture/tokenizer-architecture.html --repo-root .
+node /tmp/archify/archify/bin/archify.mjs check \
+  docs/architecture/tokenizer-architecture.html
 ```
 
-Archify currently produces one typed artifact per view. The two flow pages are checked-in standalone interactive documents based on the same verified source trace; when editing their topology, regenerate them as Archify sequence/workflow artifacts and re-check every source claim.
+The [documentation workflow](../../.github/workflows/archify-docs.yml) renders and checks this one diagram, captures its PNG, and uploads both files as `archify-generated-diagrams`. After editing the JSON, replace the checked-in HTML and PNG with the outputs from the successful run so downloads and previews stay aligned. Update the provenance above to identify that run.
 
-## Validation checklist
+For new topology or layout, use Archify's `finalize architecture … --repo-root . --quality showcase --json` workflow and review its diagnostics before publishing. The historical build above used `render` and `check`; it is not a full `finalize` receipt.
 
-- Download the `archify-generated-diagrams` workflow artifact and open its HTML files locally for interactive exploration.
-- Use the view controls and click each node to verify source links.
-- Confirm every relative repository link resolves.
-- Validate the JSON with Archify against the pinned repository revision.
-- Run the existing test suite after documentation edits: `pytest tests/ -v`.
-
-No generated page is imported by Python, included in the Docker runtime, or required to install/use the project.
+Archify adds no Python runtime dependency. The diagram cleanup changes documentation only.

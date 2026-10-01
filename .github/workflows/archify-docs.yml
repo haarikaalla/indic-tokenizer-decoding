@@ -2,7 +2,7 @@ name: Build Archify documentation
 
 on:
   push:
-    branches: [main, fix/archify-visible-diagrams]
+    branches: [main]
     paths:
       - "docs/architecture/**"
       - ".github/workflows/archify-docs.yml"
@@ -45,25 +45,17 @@ jobs:
       - name: Render with official Archify CLI
         run: |
           node .archify-tool/archify/bin/archify.mjs render architecture docs/architecture/tokenizer-architecture.json docs/architecture/tokenizer-architecture.html --repo-root .
-          node .archify-tool/archify/bin/archify.mjs render sequence docs/architecture/encoding-flow.json docs/architecture/encoding-flow.html --repo-root .
-          node .archify-tool/archify/bin/archify.mjs render sequence docs/architecture/decoding-flow.json docs/architecture/decoding-flow.html --repo-root .
 
       - name: Verify Archify output
         run: |
           node .archify-tool/archify/bin/archify.mjs check docs/architecture/tokenizer-architecture.html
-          node .archify-tool/archify/bin/archify.mjs check docs/architecture/encoding-flow.html
-          node .archify-tool/archify/bin/archify.mjs check docs/architecture/decoding-flow.html
 
       - name: Capture GitHub-visible previews
         run: |
           CHROME="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
           test -n "$CHROME"
           "$CHROME" --headless=new --no-sandbox --disable-dev-shm-usage --hide-scrollbars --window-size=1440,1000 --virtual-time-budget=3000 --screenshot="$PWD/docs/architecture/tokenizer-architecture.png" "file://$PWD/docs/architecture/tokenizer-architecture.html"
-          "$CHROME" --headless=new --no-sandbox --disable-dev-shm-usage --hide-scrollbars --window-size=1440,1000 --virtual-time-budget=3000 --screenshot="$PWD/docs/architecture/encoding-flow.png" "file://$PWD/docs/architecture/encoding-flow.html"
-          "$CHROME" --headless=new --no-sandbox --disable-dev-shm-usage --hide-scrollbars --window-size=1440,1000 --virtual-time-budget=3000 --screenshot="$PWD/docs/architecture/decoding-flow.png" "file://$PWD/docs/architecture/decoding-flow.html"
           test -s docs/architecture/tokenizer-architecture.png
-          test -s docs/architecture/encoding-flow.png
-          test -s docs/architecture/decoding-flow.png
 
       - name: Upload generated Archify files
         uses: actions/upload-artifact@v4
@@ -72,8 +64,4 @@ jobs:
           path: |
             docs/architecture/tokenizer-architecture.html
             docs/architecture/tokenizer-architecture.png
-            docs/architecture/encoding-flow.html
-            docs/architecture/encoding-flow.png
-            docs/architecture/decoding-flow.html
-            docs/architecture/decoding-flow.png
           if-no-files-found: error

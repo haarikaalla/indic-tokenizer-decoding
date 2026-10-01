@@ -80,64 +80,21 @@ pipeline: multilingual tokenization, controllable generation, and a
 safety-gated serving layer, built end to end rather than stitched from
 pretrained APIs.
 
-##  Architecture at a glance
-
-```mermaid
-flowchart LR
-    subgraph OFFLINE["🔧 Offline — training pipeline"]
-        direction TB
-        C[" Synthetic corpora<br/>hi · te · ml · kn"] --> T[" SentencePiece BPE<br/>1 shared + 4 per-language"]
-        T --> M[" TinyGPT<br/>decoder-only Transformer<br/>~1.2M params"]
-        C2[" Labeled sentiment data"] --> CL[" BiLSTM classifier"]
-        M --> Q["int8 dynamic quantization<br/>65.8% smaller"]
-    end
-
-    subgraph ONLINE[" Online — serving pipeline"]
-        direction TB
-        REQ["POST /generate"] --> TOK["IndicTokenizer.encode"]
-        TOK --> DEC{"Decoding strategy"}
-        DEC -->|greedy| G["Greedy"]
-        DEC -->|beam| B["Beam search w=4"]
-        DEC -->|top_k| K["Top-k k=10"]
-        DEC -->|top_p| P["Top-p p=0.9"]
-        G & B & K & P --> SF{" Safety filter<br/>accept or regenerate"}
-        SF -->|accepted| OUT["JSON response<br/>text · strategy · latency_ms"]
-        SF -->|rejected| DEC
-    end
-
-    M -.->|checkpoint| DEC
-    T -.->|tokenizer| TOK
-    CL -.->|classifier| SF
-
-    style OFFLINE fill:#f6f8fa,stroke:#8b949e
-    style ONLINE fill:#eef7ff,stroke:#1f6feb
-    style OUT fill:#d4f4dd,stroke:#2ea043
-    style SF fill:#fff3cd,stroke:#d29922
-```
-
 ##  Interactive architecture
 
-These diagrams are generated from the checked-in JSON specifications by the official **[Archify](https://github.com/tt-a1i/archify) v3.0.1** renderer. The PNG previews render directly on GitHub. The workflow also packages the official interactive HTML files as a downloadable GitHub Actions artifact.
+**[Download the interactive Archify diagram](https://github.com/haarikaalla/indic-tokenizer-decoding/raw/refs/heads/main/docs/architecture/tokenizer-architecture.html)** — save the HTML file, then open it in your browser.
 
-### Overall project architecture
+[![Archify architecture preview — download the HTML to explore](docs/architecture/tokenizer-architecture.png)](https://github.com/haarikaalla/indic-tokenizer-decoding/raw/refs/heads/main/docs/architecture/tokenizer-architecture.html)
 
-![Archify-generated overall project architecture](docs/architecture/tokenizer-architecture.png)
+One architecture map covers runtime generation, training, model artifacts, safety, evaluation, and benchmarks. The HTML is the actual output of the official **[Archify v3.0.1](https://github.com/tt-a1i/archify/tree/v3.0.1)** renderer.
 
-[Archify JSON source](docs/architecture/tokenizer-architecture.json)
+- Click a component to inspect its connections and source files.
+- Use **PATH** to explore a directed route, **LENS** to compare component types, and search to find a node.
+- Zoom, switch themes, enter presentation mode, or export an image.
 
-### Encoding pipeline
+GitHub displays the static preview above; interactive controls work in the downloaded HTML. No Archify installation is needed to view it.
 
-![Archify-generated encoding pipeline](docs/architecture/encoding-flow.png)
-
-[Archify JSON source](docs/architecture/encoding-flow.json)
-
-### Decoding pipeline
-
-![Archify-generated decoding pipeline](docs/architecture/decoding-flow.png)
-
-[Archify JSON source](docs/architecture/decoding-flow.json) · [Documentation guide](docs/architecture/README.md)
-
-> Archify is documentation-only. It is not a Python dependency and does not alter tokenizer, decoder, model, API, tests, benchmarks, or runtime behavior.
+[Diagram source](docs/architecture/tokenizer-architecture.json) · [Viewing and regeneration guide](docs/architecture/README.md)
 
 ##  What is built from scratch
 
@@ -439,38 +396,7 @@ for the explicit origins listed in `ITD_CORS_ORIGINS`.
 
 **Request lifecycle — including the safety retry loop:**
 
-```mermaid
-sequenceDiagram
-    autonumber
-    participant U as  Client
-    participant A as  FastAPI
-    participant P as  Pipeline
-    participant M as  TinyGPT
-    participant S as  SafetyFilter
-
-    Note over A: Models loaded ONCE at startup<br/>(lifespan), never per request
-
-    U->>A: POST /generate {prompt, strategy, safety_filter}
-    A->>A: Pydantic validation + language-tag check
-    alt unsupported tag / bad bounds
-        A-->>U: 400 with an actionable message
-    else models not loaded
-        A-->>U: 503 (degraded mode)
-    end
-    A->>P: generate(prompt, strategy)
-    loop up to max_filter_attempts
-        P->>M: forward pass → logits
-        M-->>P: next-token distribution
-        P->>S: classify(candidate)
-        S-->>P: P(positive)
-        alt accepted
-            P-->>A: text
-        else rejected
-            Note over P,S: reseed and regenerate
-        end
-    end
-    A-->>U: 200 {text, strategy, safety_filter_applied, latency_ms}
-```
+See the [interactive architecture](#interactive-architecture) to explore the API, generation pipeline, model, and safety filter connections.
 
 ##  8b. Configuration (`config.py`)
 
