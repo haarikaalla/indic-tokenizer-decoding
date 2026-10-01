@@ -4,10 +4,9 @@ This directory contains source-backed, standalone architecture views for the rep
 
 | Artifact | Purpose |
 |---|---|
-| [Overall architecture](tokenizer-architecture.html) | Runtime modules, training paths, artifacts, evaluation, benchmarks, quantization, and actual external libraries |
-| [Archify JSON source](tokenizer-architecture.json) | Editable typed architecture specification |
-| [Encoding flow](encoding-flow.html) | Prompt validation, SentencePiece encoding, BOS insertion, tensor creation, and model input |
-| [Decoding flow](decoding-flow.html) | Strategy selection, autoregressive logits loop, EOS handling, text decoding, and optional safety retries |
+| ![Overall architecture preview](tokenizer-architecture.png)<br>[Interactive HTML](tokenizer-architecture.html) · [JSON source](tokenizer-architecture.json) | Runtime modules, training paths, artifacts, evaluation, benchmarks, quantization, and actual external libraries |
+| ![Encoding flow preview](encoding-flow.png)<br>[Interactive HTML](encoding-flow.html) · [JSON source](encoding-flow.json) | Prompt validation, SentencePiece encoding, BOS insertion, tensor creation, and model input |
+| ![Decoding flow preview](decoding-flow.png)<br>[Interactive HTML](decoding-flow.html) · [JSON source](decoding-flow.json) | Strategy selection, autoregressive logits loop, EOS handling, text decoding, and optional safety retries |
 
 ## Evidence and scope
 
