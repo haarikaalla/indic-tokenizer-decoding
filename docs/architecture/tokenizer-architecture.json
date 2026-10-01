@@ -111,7 +111,7 @@
       "label": "SentencePiece tokenizer",
       "sublabel": "language tags, BOS/EOS, IDs ↔ text",
       "pos": [
-        760,
+        850,
         55
       ],
       "size": [
@@ -133,7 +133,7 @@
       "label": "TinyGPT",
       "sublabel": "decoder-only Transformer logits",
       "pos": [
-        760,
+        850,
         205
       ],
       "size": [
@@ -152,7 +152,7 @@
       "label": "Decoding strategies",
       "sublabel": "greedy · beam · top-k · top-p",
       "pos": [
-        760,
+        850,
         355
       ],
       "size": [
@@ -348,7 +348,11 @@
       "from": "pipeline",
       "to": "model",
       "label": "token IDs → logits",
-      "route": "auto"
+      "route": "auto",
+      "labelAt": [
+        780,
+        255
+      ]
     },
     {
       "id": "pipeline-decoding",
@@ -419,7 +423,11 @@
       "from": "artifacts",
       "to": "benchmarks",
       "label": "shared model/data setup",
-      "route": "auto"
+      "route": "auto",
+      "labelAt": [
+        1013,
+        455
+      ]
     },
     {
       "id": "artifacts-quantization",
