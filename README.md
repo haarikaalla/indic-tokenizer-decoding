@@ -117,14 +117,27 @@ flowchart LR
 
 ##  Interactive architecture
 
-Explore the implementation through standalone, clickable documentation. These pages are based on the actual source tree and require no project runtime:
+These diagrams are generated from the checked-in JSON specifications by the official **[Archify](https://github.com/tt-a1i/archify) v3.0.1** renderer. The PNG previews render directly on GitHub; download the matching HTML file for the full interactive viewer.
 
-- **[Overall project architecture](docs/architecture/tokenizer-architecture.html)** — runtime composition, module relationships, training, artifacts, evaluation, benchmarks, and quantization
-- **[Encoding flow](docs/architecture/encoding-flow.html)** — validation, SentencePiece tokenization, BOS handling, and PyTorch tensor creation
-- **[Decoding flow](docs/architecture/decoding-flow.html)** — strategy dispatch, autoregressive logits loop, EOS handling, detokenization, and safety retries
-- **[Architecture source and regeneration guide](docs/architecture/README.md)** — Archify JSON, evidence scope, and documentation-only regeneration commands
+### Overall project architecture
 
-> Archify is used only to author and visualize documentation. It is not a Python dependency, is never imported at runtime, and does not alter tokenizer, decoder, model, API, test, or benchmark behavior.
+![Archify-generated overall project architecture](docs/architecture/tokenizer-architecture.png)
+
+[Interactive HTML](docs/architecture/tokenizer-architecture.html) · [Archify JSON](docs/architecture/tokenizer-architecture.json)
+
+### Encoding pipeline
+
+![Archify-generated encoding pipeline](docs/architecture/encoding-flow.png)
+
+[Interactive HTML](docs/architecture/encoding-flow.html) · [Archify JSON](docs/architecture/encoding-flow.json)
+
+### Decoding pipeline
+
+![Archify-generated decoding pipeline](docs/architecture/decoding-flow.png)
+
+[Interactive HTML](docs/architecture/decoding-flow.html) · [Archify JSON](docs/architecture/decoding-flow.json) · [Documentation guide](docs/architecture/README.md)
+
+> Archify is documentation-only. It is not a Python dependency and does not alter tokenizer, decoder, model, API, tests, benchmarks, or runtime behavior.
 
 ##  What is built from scratch
 
