@@ -106,33 +106,19 @@
       "variant": "emphasis"
     },
     {
-      "id": "context",
-      "from": "strategy",
-      "to": "strategy",
-      "y": 270,
-      "label": "crop to model.max_seq_len"
-    },
-    {
       "id": "logits",
       "from": "strategy",
       "to": "model",
       "y": 330,
-      "label": "forward pass for next-token logits"
+      "label": "crop context; forward for next-token logits"
     },
     {
       "id": "scores",
       "from": "model",
       "to": "strategy",
       "y": 390,
-      "label": "last-position vocabulary logits",
+      "label": "logits; select/sample ID; append; test EOS",
       "variant": "return"
-    },
-    {
-      "id": "choose",
-      "from": "strategy",
-      "to": "strategy",
-      "y": 450,
-      "label": "select/sample ID; append; stop on EOS"
     },
     {
       "id": "ids",
