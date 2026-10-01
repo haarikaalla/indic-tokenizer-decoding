@@ -1,13 +1,12 @@
 # Interactive architecture documentation
 
-This directory contains source-backed, standalone architecture views for the repository at commit `5bb428e9b1c8e031e6d78ef8caa8a9ad26614fc8`.
+This directory contains source-backed Archify architecture views for the repository at commit `5bb428e9b1c8e031e6d78ef8caa8a9ad26614fc8`.
 
 | Artifact | Purpose |
 |---|---|
-| [Overall architecture](tokenizer-architecture.html) | Runtime modules, training paths, artifacts, evaluation, benchmarks, quantization, and actual external libraries |
-| [Archify JSON source](tokenizer-architecture.json) | Editable typed architecture specification |
-| [Encoding flow](encoding-flow.html) | Prompt validation, SentencePiece encoding, BOS insertion, tensor creation, and model input |
-| [Decoding flow](decoding-flow.html) | Strategy selection, autoregressive logits loop, EOS handling, text decoding, and optional safety retries |
+| ![Overall architecture preview](tokenizer-architecture.png)<br>[JSON source](tokenizer-architecture.json) | Runtime modules, training paths, artifacts, evaluation, benchmarks, quantization, and actual external libraries |
+| ![Encoding flow preview](encoding-flow.png)<br>[JSON source](encoding-flow.json) | Prompt validation, SentencePiece encoding, BOS insertion, tensor creation, and model input |
+| ![Decoding flow preview](decoding-flow.png)<br>[JSON source](decoding-flow.json) | Strategy selection, autoregressive logits loop, EOS handling, text decoding, and optional safety retries |
 
 ## Evidence and scope
 
@@ -38,7 +37,7 @@ Archify currently produces one typed artifact per view. The two flow pages are c
 
 ## Validation checklist
 
-- Open every HTML file directly in a browser; no web server or project runtime is required.
+- Download the `archify-generated-diagrams` workflow artifact and open its HTML files locally for interactive exploration.
 - Use the view controls and click each node to verify source links.
 - Confirm every relative repository link resolves.
 - Validate the JSON with Archify against the pinned repository revision.
