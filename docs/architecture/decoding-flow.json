@@ -17,7 +17,7 @@
     {
       "id": "pipeline",
       "type": "backend",
-      "label": "Generation Pipeline",
+      "label": "Pipeline",
       "sources": [
         {
           "path": "pipeline.py"
@@ -28,7 +28,7 @@
       "id": "strategy",
       "type": "backend",
       "label": "Decode Strategy",
-      "sublabel": "greedy / beam / top-k / top-p",
+      "sublabel": "4 strategies",
       "sources": [
         {
           "path": "decoding/strategies.py"
