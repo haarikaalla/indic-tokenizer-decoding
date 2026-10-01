@@ -19,7 +19,7 @@ permissions:
   id-token: write
 
 concurrency:
-  group: archify-pages
+  group: archify-pages-${{ github.event_name }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
