@@ -115,6 +115,17 @@ flowchart LR
     style SF fill:#fff3cd,stroke:#d29922
 ```
 
+##  Interactive architecture
+
+Explore the implementation through standalone, clickable documentation. These pages are based on the actual source tree and require no project runtime:
+
+- **[Overall project architecture](docs/architecture/tokenizer-architecture.html)** — runtime composition, module relationships, training, artifacts, evaluation, benchmarks, and quantization
+- **[Encoding flow](docs/architecture/encoding-flow.html)** — validation, SentencePiece tokenization, BOS handling, and PyTorch tensor creation
+- **[Decoding flow](docs/architecture/decoding-flow.html)** — strategy dispatch, autoregressive logits loop, EOS handling, detokenization, and safety retries
+- **[Architecture source and regeneration guide](docs/architecture/README.md)** — Archify JSON, evidence scope, and documentation-only regeneration commands
+
+> Archify is used only to author and visualize documentation. It is not a Python dependency, is never imported at runtime, and does not alter tokenizer, decoder, model, API, test, or benchmark behavior.
+
 ##  What is built from scratch
 
 | Component | From scratch? | What that means here |
@@ -542,7 +553,7 @@ docker build -t indic-generation-service .
 docker run -p 8000:8000 indic-generation-service
 ```
 
-##  What I'd do next with more compute
+##  Future roadmap — what I'd do next with more compute
 
 - Swap the synthetic corpora for real ones (IndicCorp/Samanantar) and
   re-measure whether the tokenizer-efficiency and diversity trends hold at

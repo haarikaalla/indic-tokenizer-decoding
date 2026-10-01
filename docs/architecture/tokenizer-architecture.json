@@ -1,0 +1,451 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Indic Multilingual Generation Service",
+    "output": "docs/architecture/tokenizer-architecture.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/haarikaalla/indic-tokenizer-decoding",
+      "provider": "github",
+      "link_mode": "web",
+      "revision": "5bb428e9b1c8e031e6d78ef8caa8a9ad26614fc8"
+    },
+    "views": [
+      {
+        "id": "runtime",
+        "label": "Runtime generation",
+        "focus": [
+          "api",
+          "pipeline",
+          "tokenizer",
+          "model",
+          "decoding",
+          "classifier"
+        ]
+      },
+      {
+        "id": "training",
+        "label": "Training and artifacts",
+        "focus": [
+          "corpora",
+          "training",
+          "artifacts"
+        ]
+      },
+      {
+        "id": "quality",
+        "label": "Evaluation and benchmarks",
+        "focus": [
+          "evaluation",
+          "benchmarks",
+          "quantization"
+        ]
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "clients",
+      "type": "frontend",
+      "label": "CLI / HTTP clients",
+      "sublabel": "generate.py · FastAPI consumers",
+      "pos": [
+        40,
+        210
+      ],
+      "size": [
+        170,
+        70
+      ],
+      "sources": [
+        {
+          "path": "generate.py"
+        },
+        {
+          "path": "api.py"
+        }
+      ]
+    },
+    {
+      "id": "api",
+      "type": "backend",
+      "label": "FastAPI service",
+      "sublabel": "health + generation endpoints",
+      "pos": [
+        270,
+        80
+      ],
+      "size": [
+        180,
+        78
+      ],
+      "sources": [
+        {
+          "path": "api.py"
+        }
+      ]
+    },
+    {
+      "id": "pipeline",
+      "type": "backend",
+      "label": "Generation pipeline",
+      "sublabel": "composition and safety retries",
+      "pos": [
+        510,
+        205
+      ],
+      "size": [
+        195,
+        82
+      ],
+      "sources": [
+        {
+          "path": "pipeline.py"
+        }
+      ]
+    },
+    {
+      "id": "tokenizer",
+      "type": "backend",
+      "label": "SentencePiece tokenizer",
+      "sublabel": "language tags, BOS/EOS, IDs ↔ text",
+      "pos": [
+        760,
+        55
+      ],
+      "size": [
+        210,
+        86
+      ],
+      "sources": [
+        {
+          "path": "pipeline.py"
+        },
+        {
+          "path": "loaders.py"
+        }
+      ]
+    },
+    {
+      "id": "model",
+      "type": "backend",
+      "label": "TinyGPT",
+      "sublabel": "decoder-only Transformer logits",
+      "pos": [
+        760,
+        205
+      ],
+      "size": [
+        210,
+        86
+      ],
+      "sources": [
+        {
+          "path": "model/lm.py"
+        }
+      ]
+    },
+    {
+      "id": "decoding",
+      "type": "backend",
+      "label": "Decoding strategies",
+      "sublabel": "greedy · beam · top-k · top-p",
+      "pos": [
+        760,
+        355
+      ],
+      "size": [
+        210,
+        86
+      ],
+      "sources": [
+        {
+          "path": "decoding/strategies.py"
+        }
+      ]
+    },
+    {
+      "id": "classifier",
+      "type": "security",
+      "label": "Safety filter",
+      "sublabel": "BiLSTM sentiment policy check",
+      "pos": [
+        510,
+        390
+      ],
+      "size": [
+        195,
+        82
+      ],
+      "sources": [
+        {
+          "path": "pipeline.py"
+        },
+        {
+          "path": "classifier/classifier_model.py"
+        }
+      ]
+    },
+    {
+      "id": "artifacts",
+      "type": "database",
+      "label": "Model artifacts",
+      "sublabel": ".model · .vocab · .pt checkpoints",
+      "pos": [
+        1030,
+        190
+      ],
+      "size": [
+        205,
+        92
+      ],
+      "sources": [
+        {
+          "path": "config.py"
+        },
+        {
+          "path": "loaders.py"
+        }
+      ]
+    },
+    {
+      "id": "corpora",
+      "type": "database",
+      "label": "Indic corpora",
+      "sublabel": "Hindi · Telugu · Malayalam · Kannada",
+      "pos": [
+        40,
+        500
+      ],
+      "size": [
+        190,
+        82
+      ],
+      "sources": [
+        {
+          "path": "data/generate_corpus.py"
+        },
+        {
+          "path": "config.py"
+        }
+      ]
+    },
+    {
+      "id": "training",
+      "type": "backend",
+      "label": "Training pipeline",
+      "sublabel": "tokenizer · LM · classifier",
+      "pos": [
+        300,
+        500
+      ],
+      "size": [
+        190,
+        82
+      ],
+      "sources": [
+        {
+          "path": "tokenizer/train_sentencepiece.py"
+        },
+        {
+          "path": "model/train.py"
+        },
+        {
+          "path": "classifier/train.py"
+        }
+      ]
+    },
+    {
+      "id": "evaluation",
+      "type": "backend",
+      "label": "Evaluation",
+      "sublabel": "perplexity · tokenizer efficiency",
+      "pos": [
+        560,
+        545
+      ],
+      "size": [
+        185,
+        78
+      ],
+      "sources": [
+        {
+          "path": "eval/evaluate.py"
+        }
+      ]
+    },
+    {
+      "id": "benchmarks",
+      "type": "backend",
+      "label": "Training benchmarks",
+      "sublabel": "custom loss and optimizer",
+      "pos": [
+        805,
+        520
+      ],
+      "size": [
+        190,
+        82
+      ],
+      "sources": [
+        {
+          "path": "custom_training/benchmark.py"
+        }
+      ]
+    },
+    {
+      "id": "quantization",
+      "type": "backend",
+      "label": "Quantization",
+      "sublabel": "dynamic int8 size and latency",
+      "pos": [
+        1055,
+        515
+      ],
+      "size": [
+        180,
+        82
+      ],
+      "sources": [
+        {
+          "path": "quantization/quantize_and_benchmark.py"
+        }
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "client-api",
+      "from": "clients",
+      "to": "api",
+      "label": "POST /generate",
+      "route": "auto"
+    },
+    {
+      "id": "client-cli",
+      "from": "clients",
+      "to": "pipeline",
+      "label": "compose / generate",
+      "route": "auto"
+    },
+    {
+      "id": "api-pipeline",
+      "from": "api",
+      "to": "pipeline",
+      "label": "build and invoke",
+      "route": "auto"
+    },
+    {
+      "id": "pipeline-tokenizer",
+      "from": "pipeline",
+      "to": "tokenizer",
+      "label": "encode prompt / decode IDs",
+      "route": "auto"
+    },
+    {
+      "id": "pipeline-model",
+      "from": "pipeline",
+      "to": "model",
+      "label": "token IDs → logits",
+      "route": "auto"
+    },
+    {
+      "id": "pipeline-decoding",
+      "from": "pipeline",
+      "to": "decoding",
+      "label": "selected strategy",
+      "route": "auto"
+    },
+    {
+      "id": "decoding-model",
+      "from": "decoding",
+      "to": "model",
+      "label": "autoregressive forward passes",
+      "route": "auto"
+    },
+    {
+      "id": "pipeline-classifier",
+      "from": "pipeline",
+      "to": "classifier",
+      "label": "optional policy check",
+      "variant": "security",
+      "route": "auto"
+    },
+    {
+      "id": "artifacts-tokenizer",
+      "from": "artifacts",
+      "to": "tokenizer",
+      "label": "load .model",
+      "route": "auto"
+    },
+    {
+      "id": "artifacts-model",
+      "from": "artifacts",
+      "to": "model",
+      "label": "load LM state",
+      "route": "auto"
+    },
+    {
+      "id": "artifacts-classifier",
+      "from": "artifacts",
+      "to": "classifier",
+      "label": "load classifier state",
+      "route": "auto"
+    },
+    {
+      "id": "corpora-training",
+      "from": "corpora",
+      "to": "training",
+      "label": "training text",
+      "route": "auto"
+    },
+    {
+      "id": "training-artifacts",
+      "from": "training",
+      "to": "artifacts",
+      "label": "write trained artifacts",
+      "route": "auto"
+    },
+    {
+      "id": "artifacts-evaluation",
+      "from": "artifacts",
+      "to": "evaluation",
+      "label": "load for metrics",
+      "route": "auto"
+    },
+    {
+      "id": "artifacts-benchmarks",
+      "from": "artifacts",
+      "to": "benchmarks",
+      "label": "shared model/data setup",
+      "route": "auto"
+    },
+    {
+      "id": "artifacts-quantization",
+      "from": "artifacts",
+      "to": "quantization",
+      "label": "float32 → int8",
+      "route": "auto"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "External runtime libraries",
+      "items": [
+        "PyTorch: model, tensors, training and quantization",
+        "SentencePiece: production BPE model training and inference",
+        "FastAPI + Pydantic + Uvicorn: serving layer"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Scope guarantee",
+      "items": [
+        "Architecture documentation only",
+        "No tokenizer, decoder, API, test, benchmark or package behavior changed"
+      ]
+    }
+  ]
+}
